@@ -34,7 +34,7 @@ app.post('/story', async (req, res) => {
 	const saveStoryRes = await saveStory(fullStory, parentStoryId);
 
 	if (saveStoryRes) {
-		return res.status(201);
+		return res.sendStatus(201);
 	}
 
 	return res.sendStatus(500);
