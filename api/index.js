@@ -1,11 +1,10 @@
-const pool = require('./db.js');
+const getDbPool = require('./db.js');
 const express = require('express');
 
 const PORT = process.env.PORT;
 
 const app = express();
 app.use(express.json());
-
 
 app.get('/story/:storyTitle', async (req, res) => {
 	const { storyTitle } = req.params;
@@ -35,15 +34,15 @@ app.post('/story', async (req, res) => {
 	const saveStoryRes = await saveStory(fullStory, parentStoryId);
 
 	if (saveStoryRes) {
-		return res.send("Added!");
+		return res.status(201);
 	}
 
-	return res.sendStatus(400);
+	return res.sendStatus(500);
 
 })
 
 async function saveStory(fullStory, parentStoryId) {
-	const client = await pool.connect();
+	const client = await getDbPool();
 
 	// Check if parent story exists
 	const parentStoryRes = await client.query(`SELECT title FROM stories WHERE id=${parentStoryId}`);
@@ -54,14 +53,15 @@ async function saveStory(fullStory, parentStoryId) {
 	}
 
 	const res = await client.query(`INSERT INTO fullstories(story, based_on) VALUES ('${fullStory}', '${parentStoryId}')`)
-	client.release();
 
+	client.release();
 	return res.rowCount
 }
 
 
 async function getStory(title) {
-	const client = await pool.connect()
+	const client = await getDbPool();
+
 	const res = await client.query(`SELECT id, description FROM stories WHERE title='${title}'`);
 
 	if (res.rowCount > 0) {
@@ -87,4 +87,3 @@ async function getStory(title) {
 app.listen(PORT, () => {
 	console.log('Listening on port', PORT);
 })
-
