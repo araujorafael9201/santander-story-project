@@ -62,14 +62,16 @@ async function saveStory(fullStory, parentStoryId) {
 async function getStory(title) {
 	const client = await getDbPool();
 
-	const res = await client.query(`SELECT id, description FROM stories WHERE title='${title}'`);
+	const res = await client.query(`SELECT stories.id, description, story FROM stories INNER JOIN fullstories ON fullstories.based_on = stories.id WHERE title='${title}'`);
 
 	if (res.rowCount > 0) {
 		const description = res.rows[0].description;
 		const id = res.rows[0].id;
 
-		const fullStoriesRes = await client.query(`SELECT story FROM fullstories WHERE based_on=${id}`);
-		const fullStories = fullStoriesRes.rows;
+		const fullStories = [];
+		res.rows.forEach(r => {
+			fullStories.push(r.story)
+		});
 
 		client.release();
 		return {
